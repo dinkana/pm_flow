@@ -19,8 +19,9 @@ const track = (goal: string) => {
 
 type View = 'intro' | 'quiz' | 'result'
 const view = ref<View>(
-  store.state.isFinished || window.location.hash.replace('#', '').length > 0 ?
-    'result' : 'intro'
+  store.state.isFinished || window.location.hash.replace('#', '').length > 0
+    ? 'result'
+    : 'intro'
 )
 
 const resultRef = ref<HTMLElement | null>(null)
@@ -52,16 +53,41 @@ const enLabels: Record<Area, string> = {
   quality: 'Quality'
 }
 
-const recEnMap: Record<string, { title: string, steps: string, expected: string }> = {
-  rec_align: { title: 'Alignment Workshop', steps: '1. Discuss business goal & metric.\n2. Define individual contributions.\n3. Fix uncertainty zones.', expected: 'Unified vision, reduced noise.' },
-  rec_risks: { title: 'Weekly Risk Management', steps: '1. Create risk registry.\n2. Review top-3 risks weekly.\n3. Assign owners.', expected: 'Proactive issue prevention.' },
-  rec_dod: { title: 'Formalize Definition of Done', steps: '1. Create acceptance criteria checklist.\n2. No work without agreed criteria.\n3. Bi-weekly user feedback.', expected: 'Fewer endless revisions.' },
-  rec_stakeholders: { title: 'Stakeholder Matrix', steps: '1. List all stakeholders.\n2. Map Power/Interest.\n3. Define comms format/frequency.', expected: 'Fewer sudden blockers.' },
-  rec_planning: { title: 'Relative Estimation & Buffers', steps: '1. Use story points/T-shirts.\n2. Calculate velocity (last 3 sprints).\n3. Add 15-20% buffer.', expected: 'Realistic forecasts.' },
-  rec_goals_fallback: { title: 'Decompose Business Goal', steps: '1. SMART goal formulation.\n2. Visualize in office/Notion.\n3. Link tasks to goal.', expected: 'Team focus, less scope creep.' }
+const recEnMap: Record<string, { title: string; steps: string; expected: string }> = {
+  rec_align: {
+    title: 'Alignment Workshop',
+    steps: '1. Discuss business goal & metric.\n2. Define individual contributions.\n3. Fix uncertainty zones.',
+    expected: 'Unified vision, reduced noise.'
+  },
+  rec_risks: {
+    title: 'Weekly Risk Management',
+    steps: '1. Create risk registry.\n2. Review top-3 risks weekly.\n3. Assign owners.',
+    expected: 'Proactive issue prevention.'
+  },
+  rec_dod: {
+    title: 'Formalize Definition of Done',
+    steps: '1. Create acceptance criteria checklist.\n2. No work without agreed criteria.\n3. Bi-weekly user feedback.',
+    expected: 'Fewer endless revisions.'
+  },
+  rec_stakeholders: {
+    title: 'Stakeholder Matrix',
+    steps: '1. List all stakeholders.\n2. Map Power/Interest.\n3. Define comms format/frequency.',
+    expected: 'Fewer sudden blockers.'
+  },
+  rec_planning: {
+    title: 'Relative Estimation & Buffers',
+    steps: '1. Use story points/T-shirts.\n2. Calculate velocity (last 3 sprints).\n3. Add 15-20% buffer.',
+    expected: 'Realistic forecasts.'
+  },
+  rec_goals_fallback: {
+    title: 'Decompose Business Goal',
+    steps: '1. SMART goal formulation.\n2. Visualize in office/Notion.\n3. Link tasks to goal.',
+    expected: 'Team focus, less scope creep.'
+  }
 }
 
-const zone = (p: number) => p < 40 ? 'red' : p <= 70 ? 'yellow' : 'green'
+const zone = (p: number) => (p < 40 ? 'red' : p <= 70 ? 'yellow' : 'green')
+
 const zoneClasses: Record<string, { ring: string; text: string; bar: string; bg: string }> = {
   red: { ring: 'ring-red-500', text: 'text-red-600 dark:text-red-400', bar: 'bg-red-500', bg: 'bg-red-500/10' },
   yellow: { ring: 'ring-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', bar: 'bg-yellow-500', bg: 'bg-yellow-500/10' },
@@ -69,7 +95,9 @@ const zoneClasses: Record<string, { ring: string; text: string; bar: string; bg:
 }
 
 const expandedRec = ref<string | null>(null)
-const toggleRec = (id: string) => { expandedRec.value = expandedRec.value === id ? null : id }
+const toggleRec = (id: string) => {
+  expandedRec.value = expandedRec.value === id ? null : id
+}
 
 const start = () => { view.value = 'quiz'; track('start_quiz') }
 const restart = () => { store.restart(); view.value = 'intro'; expandedRec.value = null }
@@ -111,17 +139,15 @@ const downloadPDF = () => {
 
   doc.setFontSize(12)
   let y = 60
+
   ;(Object.keys(store.areaScores) as Area[]).forEach(area => {
     const score = store.areaScores[area]
     doc.text(`${enLabels[area]}: ${score}%`, 20, y)
-
     doc.setFillColor(220, 220, 220)
     doc.rect(100, y - 4, 70, 5, 'F')
-
     const color = score < 40 ? [239, 68, 68] : score <= 70 ? [234, 179, 8] : [34, 197, 94]
     doc.setFillColor(color[0], color[1], color[2])
     doc.rect(100, y - 4, (70 * score) / 100, 5, 'F')
-
     y += 12
   })
 
@@ -130,24 +156,23 @@ const downloadPDF = () => {
     doc.setFontSize(16)
     doc.text('Action Plan', 20, y)
     y += 10
-
     doc.setFontSize(11)
+
     store.recommendations.forEach((rec, i) => {
       if (y > 250) { doc.addPage(); y = 20; }
-
       const enRec = recEnMap[rec.id] || { title: rec.title, steps: rec.steps, expected: rec.expected }
-
-      doc.setFont(undefined, 'bold')
+      
+      doc.setFont('Helvetica', 'bold')
       doc.text(`${i + 1}. ${enRec.title}`, 20, y)
       y += 6
-
-      doc.setFont(undefined, 'normal')
+      
+      doc.setFont('Helvetica', 'normal')
       doc.setFontSize(10)
       const stepsText = enRec.steps.replace(/\n/g, ' ')
       const stepsLines = doc.splitTextToSize(`Steps: ${stepsText}`, 170)
       doc.text(stepsLines, 20, y)
       y += stepsLines.length * 5 + 2
-
+      
       const expLines = doc.splitTextToSize(`Expected: ${enRec.expected}`, 170)
       doc.text(expLines, 20, y)
       y += expLines.length * 5 + 8
@@ -157,7 +182,6 @@ const downloadPDF = () => {
   doc.setFontSize(9)
   doc.setTextColor(120)
   doc.text('Generated by PM Flow', pageWidth / 2, 280, { align: 'center' })
-
   doc.save(`project-health-${Date.now()}.pdf`)
 }
 
@@ -186,8 +210,7 @@ const flashMsg = ref('')
           <p class="text-gray-600 dark:text-gray-300">Быстрый чекап здоровья проекта</p>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          12 коротких по 6 ключевым областям для оценки и
-          формирования плана действий в помощь менеджерам проектов и бизнес аналитикам.
+          12 коротких по 6 ключевым областям для оценки и формирования плана действий в помощь менеджерам проектов и бизнес аналитикам.
         </p>
         <button @click="start"
           class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
@@ -206,11 +229,11 @@ const flashMsg = ref('')
           <span class="text-sm text-gray-500 dark:text-gray-400">{{ store.progress.toFixed(0) }}%</span>
         </div>
         <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
-             role="progressbar"
-             :aria-valuenow="Math.round(store.progress)"
-             aria-valuemin="0"
-             aria-valuemax="100"
-             :aria-label="`Прогресс опроса: ${Math.round(store.progress)} процентов`">
+          role="progressbar"
+          :aria-valuenow="Math.round(store.progress)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-label="`Прогресс опроса: ${Math.round(store.progress)} процентов`">
           <div class="h-full bg-blue-500 transition-all duration-300" :style="{ width: store.progress + '%' }"></div>
         </div>
         <div class="space-y-3">
@@ -218,10 +241,11 @@ const flashMsg = ref('')
           <p class="text-sm text-gray-500 dark:text-gray-400 italic">{{ store.currentQuestion.tooltip }}</p>
         </div>
         <div class="grid grid-cols-2 gap-3" role="radiogroup">
-          <button v-for="opt in ([3, 2, 1, 0] as const)" :key="opt"
-            @click="store.setAnswer(opt)"
+          <button v-for="opt in ([3, 2, 1, 0] as const)" :key="opt" @click="store.setAnswer(opt)"
             :aria-pressed="store.state.answers[store.currentQuestion.id] === opt"
-            :class="store.state.answers[store.currentQuestion.id] === opt ? 'bg-blue-600 text-white ring-2 ring-blue-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'"
+            :class="store.state.answers[store.currentQuestion.id] === opt
+              ? 'bg-blue-600 text-white ring-2 ring-blue-400'
+              : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700'"
             class="p-4 rounded-lg text-center font-medium transition-colors">
             {{ opt === 3 ? 'Да' : opt === 2 ? 'Скорее да' : opt === 1 ? 'Скорее нет' : 'Нет' }}
           </button>
@@ -261,11 +285,11 @@ const flashMsg = ref('')
               <span :class="zoneClasses[zone(score)].text" class="font-semibold">{{ score }}%</span>
             </div>
             <div class="h-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
-                 role="progressbar"
-                 :aria-valuenow="score"
-                 aria-valuemin="0"
-                 aria-valuemax="100"
-                 :aria-label="`${areaLabels[area as Area]}: ${score} процентов`">
+              role="progressbar"
+              :aria-valuenow="score"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              :aria-label="`${areaLabels[area as Area]}: ${score} процентов`">
               <div :class="zoneClasses[zone(score)].bar" class="h-full transition-all duration-500" :style="{ width: score + '%' }"></div>
             </div>
           </div>
@@ -275,8 +299,7 @@ const flashMsg = ref('')
           <div class="space-y-2">
             <div v-for="(rec, index) in store.recommendations" :key="rec.id"
               class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <button @click="toggleRec(rec.id)"
-                :aria-expanded="expandedRec === rec.id"
+              <button @click="toggleRec(rec.id)" :aria-expanded="expandedRec === rec.id"
                 :aria-controls="`rec-panel-${rec.id}`"
                 class="w-full flex items-center justify-between p-4 text-left bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                 <span class="flex items-center gap-3">
@@ -289,9 +312,7 @@ const flashMsg = ref('')
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </button>
-              <div v-if="expandedRec === rec.id" 
-                :id="`rec-panel-${rec.id}`"
-                role="region"
+              <div v-if="expandedRec === rec.id" :id="`rec-panel-${rec.id}`" role="region"
                 class="p-4 bg-white dark:bg-gray-900 space-y-3 border-t border-gray-200 dark:border-gray-700">
                 <div>
                   <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Шаги:</h4>
@@ -326,13 +347,11 @@ const flashMsg = ref('')
         </button>
       </div>
     </div>
-
     <footer class="w-full max-w-lg text-center text-xs text-gray-500 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-800">
-      Инструмент создан Din Kana, PM/BA. <br>Для сотрудничества:
+      Инструмент создан Din Kana, PM/BA.<br>Для сотрудничества:
       <a href="https://t.me/din_kana" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">Telegram</a> ·
       <a href="https://www.linkedin.com/in/din-kana/" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">LinkedIn</a>
     </footer>
-
     <transition name="fade">
       <div v-if="flashMsg" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg shadow-lg text-sm">
         {{ flashMsg }}
