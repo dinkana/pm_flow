@@ -3,37 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="canonical" href="https://pm-flow.vercel.app/" />
+  <link rel="canonical" href="https://dinkana.github.io/pm_flow/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Project Health Check — диагностика проекта за 3 минуты</title>
   <meta name="title" content="Project Health Check — диагностика проекта за 3 минуты" />
   <meta name="description" content="Бесплатный инструмент для быстрой самодиагностики проектов. 12 вопросов, объективная оценка, конкретный план действий. Без регистрации." />
   <meta name="keywords" content="управление проектами, PM, диагностика, аудит проекта, здоровье проекта, agile, scrum" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://pm-flow.vercel.app/" />
+  <meta property="og:url" content="https://dinkana.github.io/pm_flow/" />
   <meta property="og:title" content="Project Health Check — диагностика проекта за 3 минуты" />
   <meta property="og:description" content="12 вопросов по 6 ключевым областям. Получи объективную оценку и план действий — без регистрации." />
-  <meta property="og:image" content="/og-image.png" />
+  <meta property="og:image" content="https://dinkana.github.io/pm_flow/og-image.png" />
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://pm-flow.vercel.app/" />
+  <meta property="twitter:url" content="https://dinkana.github.io/pm_flow/" />
   <meta property="twitter:title" content="Project Health Check — диагностика проекта за 3 минуты" />
   <meta property="twitter:description" content="12 вопросов по 6 ключевым областям. Получи объективную оценку и план действий — без регистрации." />
-  <meta property="twitter:image" content="/og-image.png" />
+  <meta property="twitter:image" content="https://dinkana.github.io/pm_flow/og-image.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
   <link rel="mask-icon" href="/masked-icon.svg" color="#2563EB">
   <meta name="theme-color" content="#2563EB">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PM Flow">
-  
   <script>
-    (function() {
+    (function(){
       const theme = localStorage.getItem('pm_flow_theme');
       const isDark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) document.documentElement.classList.add('dark');
+      if(isDark) document.documentElement.classList.add('dark');
     })();
   </script>
-
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">
     (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -41,7 +39,11 @@
     for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
     k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
     (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-    ym(12345678, "init", { clickmap:true, trackLinks:true, accurateTrackBounce:true }); // TODO: Замените 12345678 на ваш ID
+    ym(12345678, "init", {
+      clickmap:true,
+      trackLinks:true,
+      accurateTrackBounce:true
+    }); // TODO: Замените 12345678 на ваш ID
   </script>
   <!-- /Yandex.Metrika counter -->
 </head>

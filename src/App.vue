@@ -183,11 +183,11 @@ const flashMsg = ref('')
       <div v-if="view === 'intro'" class="text-center space-y-6">
         <div class="space-y-3">
           <h1 class="text-3xl font-bold text-blue-600 dark:text-blue-400">Project Health Check</h1>
-          <p class="text-gray-600 dark:text-gray-300">Проверь здоровье проекта за 3 минуты</p>
+          <p class="text-gray-600 dark:text-gray-300">Быстрый чекап здоровья проекта</p>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          12 коротких вопросов по 6 ключевым областям. Получи объективную оценку и
-          план действий — без регистрации и отправки данных на сервер.
+          12 коротких по 6 ключевым областям для оценки и
+          формирования плана действий в помощь менеджерам проектов и бизнес аналитикам.
         </p>
         <button @click="start"
           class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
@@ -328,7 +328,7 @@ const flashMsg = ref('')
     </div>
 
     <footer class="w-full max-w-lg text-center text-xs text-gray-500 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-800">
-      Инструмент создан Din Kana, PM/BA. Потребовалась глубинная экспертиза?
+      Инструмент создан Din Kana, PM/BA. <br>Для сотрудничества:
       <a href="https://t.me/din_kana" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">Telegram</a> ·
       <a href="https://www.linkedin.com/in/din-kana/" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">LinkedIn</a>
     </footer>
