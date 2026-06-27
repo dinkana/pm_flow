@@ -15,6 +15,7 @@ export const useQuizStore = defineStore('quiz', () => {
   })
 
   const questions = config.questions
+
   const progress = computed(() => ((state.value.currentQuestionIndex + 1) / questions.length) * 100)
   const currentQuestion = computed(() => questions[state.value.currentQuestionIndex])
 
@@ -63,9 +64,7 @@ export const useQuizStore = defineStore('quiz', () => {
       }
     }
 
-    return matchedRecs
-      .sort((a, b) => a.priority - b.priority)
-      .slice(0, 5)
+    return matchedRecs.sort((a, b) => a.priority - b.priority).slice(0, 5)
   })
 
   const hash = computed(() => {
@@ -116,7 +115,7 @@ export const useQuizStore = defineStore('quiz', () => {
     if (hashVal) {
       try {
         const decoded = atob(hashVal)
-        if (decoded.length === questions.length) {
+        if (decoded.length === questions.length && /^[0-3]+$/.test(decoded)) {
           decoded.split('').forEach((char, i) => {
             state.value.answers[questions[i].id] = Number(char) as AnswerValue
           })
@@ -124,20 +123,43 @@ export const useQuizStore = defineStore('quiz', () => {
           state.value.currentQuestionIndex = questions.length - 1
           return
         }
-      } catch {}
+      } catch {
+        window.location.hash = ''
+      }
     }
 
     if (stored) {
       try {
-        Object.assign(state.value, JSON.parse(stored))
-      } catch {}
+        const parsed = JSON.parse(stored)
+        if (parsed && typeof parsed === 'object' && parsed.answers && typeof parsed.currentQuestionIndex === 'number') {
+          state.value.currentQuestionIndex = parsed.currentQuestionIndex
+          state.value.answers = parsed.answers
+          state.value.isFinished = !!parsed.isFinished
+          return
+        }
+      } catch {
+        localStorage.removeItem(STORAGE_KEY)
+      }
     }
+
+    state.value.currentQuestionIndex = 0
+    state.value.answers = {}
+    state.value.isFinished = false
   }
 
   restore()
 
   return {
-    state, questions, progress, currentQuestion, areaScores, healthScore, recommendations,
-    setAnswer, next, prev, restart
+    state,
+    questions,
+    progress,
+    currentQuestion,
+    areaScores,
+    healthScore,
+    recommendations,
+    setAnswer,
+    next,
+    prev,
+    restart
   }
 })
