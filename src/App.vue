@@ -76,8 +76,8 @@ const restart = () => { store.restart(); view.value = 'intro'; expandedRec.value
 
 const reportText = computed(() => {
   const lines = [`Project Health Check`, `Здоровье проекта: ${store.healthScore}%`, ``]
-  ;(Object.keys(store.areaScores) as Area[]).forEach(a =>
-    lines.push(`${areaLabels[a]}: ${store.areaScores[a]}%`)
+  Object.entries(store.areaScores).forEach(([area, score]) =>
+    lines.push(`${areaLabels[area as Area]!}: ${score}%`)
   )
   return lines.join('\n')
 })
@@ -111,9 +111,8 @@ const downloadPDF = () => {
 
   doc.setFontSize(12)
   let y = 60
-  ;(Object.keys(store.areaScores) as Area[]).forEach(area => {
-    const score = store.areaScores[area]
-    doc.text(`${enLabels[area]}: ${score}%`, 20, y)
+  Object.entries(store.areaScores).forEach(([area, score]) => {
+    doc.text(`${enLabels[area as Area]!}: ${score}%`, 20, y)
 
     doc.setFillColor(220, 220, 220)
     doc.rect(100, y - 4, 70, 5, 'F')
