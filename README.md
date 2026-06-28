@@ -58,6 +58,4 @@ Health = avg(Scope×1.3, Stakeholders, Planning, Risks, Team, Quality)
 
 ## Автор
 
-[Din Kana](https://t.me/din_kana) — PM/BA
-
-[LinkedIn](https://www.linkedin.com/in/din-kana/)
+[Din Kana](https://t.me/din_kana) · [LinkedIn](https://www.linkedin.com/in/din-kana/)
