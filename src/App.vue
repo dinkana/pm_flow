@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
+import html2canvas from 'html2canvas'
 import { jsPDF } from 'jspdf'
 import { useQuizStore } from '@/stores/quiz'
 import { useInstallPrompt } from '@/composables/useInstallPrompt'
@@ -90,6 +91,7 @@ const markdownText = computed(() => {
 })
 
 const flashMsg = ref('')
+const isGeneratingPdf = ref(false)
 
 const copyReport = async () => {
   track('copy_report')
@@ -113,96 +115,114 @@ const copyMarkdown = async () => {
   setTimeout(() => flashMsg.value = '', 2000)
 }
 
-const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-  let binary = ''
-  const bytes = new Uint8Array(buffer)
-  const len = bytes.byteLength
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
-}
-
 const downloadPDF = async () => {
   track('download_pdf')
-  const doc = new jsPDF()
-  let fontName = 'helvetica'
+  isGeneratingPdf.value = true
+  
+  const pdfContent = document.createElement('div')
+  pdfContent.style.padding = '15mm'
+  pdfContent.style.fontFamily = 'Arial, Helvetica, sans-serif'
+  pdfContent.style.backgroundColor = 'white'
+  pdfContent.style.color = 'black'
+  pdfContent.style.width = '210mm'
+  pdfContent.style.boxSizing = 'border-box'
+  pdfContent.style.lineHeight = '1.4'
+  
+  let html = `
+    <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #2563EB; padding-bottom: 15px;">
+      <h1 style="font-size: 22px; margin: 0; color: #2563EB; font-weight: bold;">Диагностика здоровья проекта</h1>
+      <p style="color: #666; margin: 5px 0 0 0; font-size: 11px;">${new Date().toLocaleDateString('ru-RU')}</p>
+    </div>
+    
+    <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 20px;">
+      <div style="flex: 1;">
+        <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #333;">Общий индекс: <span style="color: #2563EB;">${store.healthScore}%</span></h2>
+      </div>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;">
+        ${(Object.keys(store.areaScores) as Area[]).map(area => {
+          const score = store.areaScores[area]
+          const color = score < 40 ? '#EF4444' : score <= 70 ? '#EAB308' : '#22C55E'
+          return `
+            <div style="margin-bottom: 5px;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px;">
+                <span style="font-weight: 500;">${areaLabels[area]}</span>
+                <span style="font-weight: bold; color: ${color};">${score}%</span>
+              </div>
+              <div style="background: #E5E7EB; height: 6px; border-radius: 3px; overflow: hidden;">
+                <div style="background: ${color}; width: ${score}%; height: 100%;"></div>
+              </div>
+            </div>
+          `
+        }).join('')}
+      </div>
+    </div>
+  `
+  
+  if (store.recommendations.length > 0) {
+    html += `
+      <div style="margin-top: 20px;">
+        <h2 style="font-size: 16px; margin-bottom: 10px; color: #333; border-left: 4px solid #2563EB; padding-left: 10px;">Приоритетные действия</h2>
+        <ol style="padding-left: 20px; margin: 0;">
+          ${store.recommendations.map((rec, i) => `
+            <li style="margin-bottom: 12px; font-size: 11px;">
+              <strong style="font-size: 12px; color: #111;">${rec.title}</strong>
+              <div style="margin-top: 4px; color: #4B5563;">
+                <div style="margin-bottom: 2px;"><strong>Шаги:</strong> ${rec.steps.replace(/\n/g, '<br>')}</div>
+                <div><strong>Результат:</strong> ${rec.expected}</div>
+              </div>
+            </li>
+          `).join('')}
+        </ol>
+      </div>
+    `
+  }
+  
+  html += `
+    <div style="position: absolute; bottom: 15mm; left: 0; right: 0; text-align: center; color: #9CA3AF; font-size: 10px; border-top: 1px solid #eee; padding-top: 10px;">
+      Сгенерировано в PM Flow · dinkana.github.io/pm_flow
+    </div>
+  `
+  
+  pdfContent.innerHTML = html
+  document.body.appendChild(pdfContent)
   
   try {
-    const res = await fetch('https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto-Regular.ttf')
-    if (res.ok) {
-      const buf = await res.arrayBuffer()
-      const base64 = arrayBufferToBase64(buf)
-      doc.addFileToVFS('Roboto-Regular.ttf', base64)
-      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
-      fontName = 'Roboto'
-    }
-  } catch (e) {
-    console.warn('Failed to load Cyrillic font, using fallback')
-  }
-
-  const pageWidth = doc.internal.pageSize.getWidth()
-  
-  doc.setFontSize(20)
-  doc.text('Диагностика здоровья проекта', pageWidth / 2, 20, { align: 'center' })
-  
-  doc.setFontSize(10)
-  doc.setTextColor(100)
-  doc.text(new Date().toLocaleDateString('ru-RU'), pageWidth / 2, 28, { align: 'center' })
-  
-  doc.setTextColor(0)
-  doc.setFontSize(16)
-  doc.text(`Общий индекс здоровья: ${store.healthScore}%`, 20, 45)
-  
-  doc.setFontSize(12)
-  let y = 60
-  
-  ;(Object.keys(store.areaScores) as Area[]).forEach(area => {
-    const score = store.areaScores[area]
-    doc.text(`${areaLabels[area]}: ${score}%`, 20, y)
-    
-    doc.setFillColor(220, 220, 220)
-    doc.rect(100, y - 4, 70, 5, 'F')
-    
-    const color = score < 40 ? [239, 68, 68] : score <= 70 ? [234, 179, 8] : [34, 197, 94]
-    doc.setFillColor(color[0], color[1], color[2])
-    doc.rect(100, y - 4, (70 * score) / 100, 5, 'F')
-    
-    y += 12
-  })
-
-  if (store.recommendations.length > 0) {
-    y += 10
-    doc.setFontSize(16)
-    doc.text('Приоритетные действия', 20, y)
-    y += 10
-    
-    doc.setFontSize(11)
-    store.recommendations.forEach((rec, i) => {
-      if (y > 250) { doc.addPage(); y = 20; }
-      
-      doc.setFont(fontName, 'bold')
-      doc.text(`${i + 1}. ${rec.title}`, 20, y)
-      y += 6
-      
-      doc.setFont(fontName, 'normal')
-      doc.setFontSize(10)
-      
-      const stepsText = rec.steps.replace(/\n/g, ' ')
-      const stepsLines = doc.splitTextToSize(`Шаги: ${stepsText}`, 170)
-      doc.text(stepsLines, 20, y)
-      y += stepsLines.length * 5 + 2
-      
-      const expLines = doc.splitTextToSize(`Ожидаемый результат: ${rec.expected}`, 170)
-      doc.text(expLines, 20, y)
-      y += expLines.length * 5 + 8
+    const canvas = await html2canvas(pdfContent, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      height: pdfContent.scrollHeight,
+      windowHeight: pdfContent.scrollHeight
     })
+    
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pdfWidth = pdf.internal.pageSize.getWidth()
+    const pdfHeight = pdf.internal.pageSize.getHeight()
+    
+    const imgWidth = canvas.width
+    const imgHeight = canvas.height
+    
+    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight)
+    const finalWidth = imgWidth * ratio
+    const finalHeight = imgHeight * ratio
+    
+    const x = (pdfWidth - finalWidth) / 2
+    const y = (pdfHeight - finalHeight) / 2
+    
+    pdf.addImage(imgData, 'PNG', x, y, finalWidth, finalHeight)
+    pdf.save(`project-health-${Date.now()}.pdf`)
+  } catch (error) {
+    console.error('PDF generation error:', error)
+    flashMsg.value = 'Ошибка генерации PDF'
+    setTimeout(() => flashMsg.value = '', 3000)
+  } finally {
+    document.body.removeChild(pdfContent)
+    isGeneratingPdf.value = false
   }
-
-  doc.setFontSize(9)
-  doc.setTextColor(120)
-  doc.text('Сгенерировано в PM Flow', pageWidth / 2, 280, { align: 'center' })
-  doc.save(`project-health-${Date.now()}.pdf`)
 }
 </script>
 
@@ -213,7 +233,7 @@ const downloadPDF = async () => {
         <button @click="toggleDark"
           class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
           :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'">
-          <svg v-if="isDark" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+          <svg v-if="isDark" class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"/>
           </svg>
           <svg v-else class="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
@@ -355,9 +375,9 @@ const downloadPDF = async () => {
             class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">
             📋 Скопировать Markdown
           </button>
-          <button @click="downloadPDF"
-            class="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors">
-            📄 Скачать PDF
+          <button @click="downloadPDF" :disabled="isGeneratingPdf"
+            class="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors disabled:opacity-50">
+            {{ isGeneratingPdf ? 'Генерация...' : ' Скачать PDF' }}
           </button>
         </div>
 

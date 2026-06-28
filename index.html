@@ -1,30 +1,49 @@
+
+## 2. Улучшения мета-тегов
+
+index.html
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="canonical" href="https://dinkana.github.io/pm_flow/" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="UTF-8"/>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
+  <link rel="canonical" href="https://dinkana.github.io/pm_flow/"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Project Health Check — диагностика проекта за 3 минуты</title>
-  <meta name="title" content="Project Health Check — диагностика проекта за 3 минуты" />
-  <meta name="description" content="Бесплатный инструмент для быстрой самодиагностики проектов. 12 вопросов, объективная оценка, конкретный план действий. Без регистрации." />
-  <meta name="keywords" content="управление проектами, PM, диагностика, аудит проекта, здоровье проекта, agile, scrum" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://dinkana.github.io/pm_flow/" />
-  <meta property="og:title" content="Project Health Check — диагностика проекта для ПМ / БА" />
-  <meta property="og:description" content="12 вопросов по 6 ключевым областям. Оценка и план действий без регистрации." />
-  <meta property="og:image" content="https://dinkana.github.io/pm_flow/og-image.png" />
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="https://dinkana.github.io/pm_flow/" />
-  <meta property="twitter:title" content="Project Health Check — диагностика проекта для ПМ / БА" />
-  <meta property="twitter:description" content="12 вопросов по 6 ключевым областям. Оценка и план действий без регистрации." />
-  <meta property="twitter:image" content="https://dinkana.github.io/pm_flow/og-image.png" />
+  
+  <!-- SEO -->
+  <meta name="title" content="Project Health Check — диагностика проекта для ПМ / БА"/>
+  <meta name="description" content="Бесплатный инструмент для быстрой самодиагностики проектов. 12 вопросов, объективная оценка, конкретный план действий. Без регистрации."/>
+  <meta name="keywords" content="управление проектами, PM, диагностика, аудит проекта, здоровье проекта, agile, scrum, project health check"/>
+  <meta name="author" content="Din Kana"/>
+  <meta name="robots" content="index, follow"/>
+  
+  <!-- Open Graph -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://dinkana.github.io/pm_flow/"/>
+  <meta property="og:title" content="Project Health Check — диагностика проекта для ПМ / БА"/>
+  <meta property="og:description" content="12 вопросов по 6 ключевым областям. Объективная оценка и план действий — без регистрации."/>
+  <meta property="og:image" content="https://dinkana.github.io/pm_flow/og-image.png"/>
+  <meta property="og:locale" content="ru_RU"/>
+  <meta property="og:site_name" content="Project Health Check"/>
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image"/>
+  <meta property="twitter:url" content="https://dinkana.github.io/pm_flow/"/>
+  <meta property="twitter:title" content="Project Health Check — диагностика проекта для ПМ / БА"/>
+  <meta property="twitter:description" content="12 вопросов по 6 ключевым областям. Объективная оценка и план действий — без регистрации."/>
+  <meta property="twitter:image" content="https://dinkana.github.io/pm_flow/og-image.png"/>
+  
+  <!-- PWA -->
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
   <link rel="mask-icon" href="/masked-icon.svg" color="#2563EB">
   <meta name="theme-color" content="#2563EB">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="PM Flow">
+  <meta name="mobile-web-app-capable" content="yes">
+  
   <script>
     (function(){
       const theme = localStorage.getItem('pm_flow_theme');
@@ -32,18 +51,28 @@
       if(isDark) document.documentElement.classList.add('dark');
     })();
   </script>
+  
   <!-- Yandex.Metrika counter -->
   <script type="text/javascript">
-      (function(m,e,t,r,i,k,a){
-          m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-          m[i].l=1*new Date();
-          for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-          k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-      })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=110214305', 'ym');
-
-      ym(110214305, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    (function(m,e,t,r,i,k,a){
+      m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+      m[i].l=1*new Date();
+      for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r){return;}}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+    })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=110214305', 'ym');
+    
+    ym(110214305, 'init', {
+      ssr: true,
+      webvisor: true,
+      clickmap: true,
+      ecommerce: "dataLayer",
+      referrer: document.referrer,
+      url: location.href,
+      accurateTrackBounce: true,
+      trackLinks: true
+    });
   </script>
-  <noscript><div><img src="https://mc.yandex.ru/watch/110214305" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+  <noscript><div><img src="https://mc.yandex.ru/watch/110214305" style="position:absolute; left:-9999px;" alt=""/></div></noscript>
   <!-- /Yandex.Metrika counter -->
 </head>
 <body>
