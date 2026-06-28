@@ -10,7 +10,7 @@ const store = useQuizStore()
 const { isInstallable, isIOS, isStandalone, install } = useInstallPrompt()
 const { isDark, toggle: toggleDark } = useDarkMode()
 
-const METRIKA_ID = 12345678 // TODO: Замените на реальный ID счетчика
+const METRIKA_ID = 110214305
 const track = (goal: string) => {
   if (typeof window !== 'undefined' && (window as any).ym) {
     (window as any).ym(METRIKA_ID, 'reachGoal', goal)
