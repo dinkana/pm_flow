@@ -113,16 +113,28 @@ const copyMarkdown = async () => {
   setTimeout(() => flashMsg.value = '', 2000)
 }
 
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+  let binary = ''
+  const bytes = new Uint8Array(buffer)
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
+
 const downloadPDF = async () => {
   track('download_pdf')
   const doc = new jsPDF()
   let fontName = 'helvetica'
   
   try {
-    const res = await fetch('https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.0.8/files/roboto-cyrillic-400-normal.woff')
+    const res = await fetch('https://raw.githubusercontent.com/google/fonts/main/ofl/roboto/Roboto-Regular.ttf')
     if (res.ok) {
       const buf = await res.arrayBuffer()
-      doc.addFont(buf, 'Roboto', 'normal')
+      const base64 = arrayBufferToBase64(buf)
+      doc.addFileToVFS('Roboto-Regular.ttf', base64)
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal')
       fontName = 'Roboto'
     }
   } catch (e) {
