@@ -44,50 +44,7 @@ const areaLabels: Record<Area, string> = {
   quality: 'Качество'
 }
 
-const enLabels: Record<Area, string> = {
-  goals: 'Goals & Scope',
-  stakeholders: 'Stakeholders',
-  planning: 'Planning',
-  risks: 'Risks',
-  team: 'Team',
-  quality: 'Quality'
-}
-
-const recEnMap: Record<string, { title: string; steps: string; expected: string }> = {
-  rec_align: {
-    title: 'Alignment Workshop',
-    steps: '1. Discuss business goal & metric.\n2. Define individual contributions.\n3. Fix uncertainty zones.',
-    expected: 'Unified vision, reduced noise.'
-  },
-  rec_risks: {
-    title: 'Weekly Risk Management',
-    steps: '1. Create risk registry.\n2. Review top-3 risks weekly.\n3. Assign owners.',
-    expected: 'Proactive issue prevention.'
-  },
-  rec_dod: {
-    title: 'Formalize Definition of Done',
-    steps: '1. Create acceptance criteria checklist.\n2. No work without agreed criteria.\n3. Bi-weekly user feedback.',
-    expected: 'Fewer endless revisions.'
-  },
-  rec_stakeholders: {
-    title: 'Stakeholder Matrix',
-    steps: '1. List all stakeholders.\n2. Map Power/Interest.\n3. Define comms format/frequency.',
-    expected: 'Fewer sudden blockers.'
-  },
-  rec_planning: {
-    title: 'Relative Estimation & Buffers',
-    steps: '1. Use story points/T-shirts.\n2. Calculate velocity (last 3 sprints).\n3. Add 15-20% buffer.',
-    expected: 'Realistic forecasts.'
-  },
-  rec_goals_fallback: {
-    title: 'Decompose Business Goal',
-    steps: '1. SMART goal formulation.\n2. Visualize in office/Notion.\n3. Link tasks to goal.',
-    expected: 'Team focus, less scope creep.'
-  }
-}
-
 const zone = (p: number) => (p < 40 ? 'red' : p <= 70 ? 'yellow' : 'green')
-
 const zoneClasses: Record<string, { ring: string; text: string; bar: string; bg: string }> = {
   red: { ring: 'ring-red-500', text: 'text-red-600 dark:text-red-400', bar: 'bg-red-500', bg: 'bg-red-500/10' },
   yellow: { ring: 'ring-yellow-500', text: 'text-yellow-600 dark:text-yellow-400', bar: 'bg-yellow-500', bg: 'bg-yellow-500/10' },
@@ -99,8 +56,16 @@ const toggleRec = (id: string) => {
   expandedRec.value = expandedRec.value === id ? null : id
 }
 
-const start = () => { view.value = 'quiz'; track('start_quiz') }
-const restart = () => { store.restart(); view.value = 'intro'; expandedRec.value = null }
+const start = () => {
+  view.value = 'quiz'
+  track('start_quiz')
+}
+
+const restart = () => {
+  store.restart()
+  view.value = 'intro'
+  expandedRec.value = null
+}
 
 const reportText = computed(() => {
   const lines = [`Project Health Check`, `Здоровье проекта: ${store.healthScore}%`, ``]
@@ -109,6 +74,22 @@ const reportText = computed(() => {
   )
   return lines.join('\n')
 })
+
+const markdownText = computed(() => {
+  let md = `# Project Health Check\n**Здоровье проекта:** ${store.healthScore}%\n\n## Разбивка по областям\n`
+  ;(Object.keys(store.areaScores) as Area[]).forEach(a => {
+    md += `- **${areaLabels[a]}:** ${store.areaScores[a]}%\n`
+  })
+  if (store.recommendations.length > 0) {
+    md += `\n## Приоритетные действия\n`
+    store.recommendations.forEach((rec, i) => {
+      md += `${i + 1}. **${rec.title}**\n   - **Шаги:** ${rec.steps.replace(/\n/g, ' ')}\n   - **Ожидаемый результат:** ${rec.expected}\n\n`
+    })
+  }
+  return md
+})
+
+const flashMsg = ref('')
 
 const copyReport = async () => {
   track('copy_report')
@@ -121,59 +102,86 @@ const copyReport = async () => {
   setTimeout(() => flashMsg.value = '', 2000)
 }
 
-const downloadPDF = () => {
+const copyMarkdown = async () => {
+  track('copy_markdown')
+  try {
+    await navigator.clipboard.writeText(markdownText.value)
+    flashMsg.value = 'Markdown скопирован'
+  } catch {
+    flashMsg.value = 'Не удалось скопировать'
+  }
+  setTimeout(() => flashMsg.value = '', 2000)
+}
+
+const downloadPDF = async () => {
   track('download_pdf')
   const doc = new jsPDF()
+  let fontName = 'helvetica'
+  
+  try {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/@fontsource/roboto@5.0.8/files/roboto-cyrillic-400-normal.woff')
+    if (res.ok) {
+      const buf = await res.arrayBuffer()
+      doc.addFont(buf, 'Roboto', 'normal')
+      fontName = 'Roboto'
+    }
+  } catch (e) {
+    console.warn('Failed to load Cyrillic font, using fallback')
+  }
+
   const pageWidth = doc.internal.pageSize.getWidth()
-
+  
   doc.setFontSize(20)
-  doc.text('Project Health Check', pageWidth / 2, 20, { align: 'center' })
-
+  doc.text('Диагностика здоровья проекта', pageWidth / 2, 20, { align: 'center' })
+  
   doc.setFontSize(10)
   doc.setTextColor(100)
-  doc.text(new Date().toLocaleDateString('en-GB'), pageWidth / 2, 28, { align: 'center' })
-
+  doc.text(new Date().toLocaleDateString('ru-RU'), pageWidth / 2, 28, { align: 'center' })
+  
   doc.setTextColor(0)
   doc.setFontSize(16)
-  doc.text(`Overall Health: ${store.healthScore}%`, 20, 45)
-
+  doc.text(`Общий индекс здоровья: ${store.healthScore}%`, 20, 45)
+  
   doc.setFontSize(12)
   let y = 60
-
+  
   ;(Object.keys(store.areaScores) as Area[]).forEach(area => {
     const score = store.areaScores[area]
-    doc.text(`${enLabels[area]}: ${score}%`, 20, y)
+    doc.text(`${areaLabels[area]}: ${score}%`, 20, y)
+    
     doc.setFillColor(220, 220, 220)
     doc.rect(100, y - 4, 70, 5, 'F')
+    
     const color = score < 40 ? [239, 68, 68] : score <= 70 ? [234, 179, 8] : [34, 197, 94]
     doc.setFillColor(color[0], color[1], color[2])
     doc.rect(100, y - 4, (70 * score) / 100, 5, 'F')
+    
     y += 12
   })
 
   if (store.recommendations.length > 0) {
     y += 10
     doc.setFontSize(16)
-    doc.text('Action Plan', 20, y)
+    doc.text('Приоритетные действия', 20, y)
     y += 10
+    
     doc.setFontSize(11)
-
     store.recommendations.forEach((rec, i) => {
       if (y > 250) { doc.addPage(); y = 20; }
-      const enRec = recEnMap[rec.id] || { title: rec.title, steps: rec.steps, expected: rec.expected }
       
-      doc.setFont('Helvetica', 'bold')
-      doc.text(`${i + 1}. ${enRec.title}`, 20, y)
+      doc.setFont(fontName, 'bold')
+      doc.text(`${i + 1}. ${rec.title}`, 20, y)
       y += 6
       
-      doc.setFont('Helvetica', 'normal')
+      doc.setFont(fontName, 'normal')
       doc.setFontSize(10)
-      const stepsText = enRec.steps.replace(/\n/g, ' ')
-      const stepsLines = doc.splitTextToSize(`Steps: ${stepsText}`, 170)
+      
+      const stepsText = rec.steps.replace(/\n/g, ' ')
+      const stepsLines = doc.splitTextToSize(`Шаги: ${stepsText}`, 170)
       doc.text(stepsLines, 20, y)
       y += stepsLines.length * 5 + 2
       
-      const expLines = doc.splitTextToSize(`Expected: ${enRec.expected}`, 170)
+      const expLines = doc.splitTextToSize(`Ожидаемый результат: ${rec.expected}`, 170)
       doc.text(expLines, 20, y)
       y += expLines.length * 5 + 8
     })
@@ -181,11 +189,9 @@ const downloadPDF = () => {
 
   doc.setFontSize(9)
   doc.setTextColor(120)
-  doc.text('Generated by PM Flow', pageWidth / 2, 280, { align: 'center' })
+  doc.text('Сгенерировано в PM Flow', pageWidth / 2, 280, { align: 'center' })
   doc.save(`project-health-${Date.now()}.pdf`)
 }
-
-const flashMsg = ref('')
 </script>
 
 <template>
@@ -210,7 +216,7 @@ const flashMsg = ref('')
           <p class="text-gray-600 dark:text-gray-300">Быстрый чекап здоровья проекта</p>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-          12 коротких по 6 ключевым областям для оценки и формирования плана действий в помощь менеджерам проектов и бизнес аналитикам.
+          12 коротких вопросов по 6 ключевым областям для оценки и формирования плана действий в помощь менеджерам проектов и бизнес-аналитикам.
         </p>
         <button @click="start"
           class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
@@ -294,6 +300,7 @@ const flashMsg = ref('')
             </div>
           </div>
         </div>
+
         <div v-if="store.recommendations.length > 0" class="space-y-3">
           <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Приоритетные действия</h2>
           <div class="space-y-2">
@@ -326,32 +333,41 @@ const flashMsg = ref('')
             </div>
           </div>
         </div>
-        <div class="grid grid-cols-2 gap-3 pt-2">
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <button @click="copyReport"
             class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">
             📝 Скопировать отчёт
+          </button>
+          <button @click="copyMarkdown"
+            class="p-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">
+            📋 Скопировать Markdown
           </button>
           <button @click="downloadPDF"
             class="p-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium text-white transition-colors">
             📄 Скачать PDF
           </button>
         </div>
+
         <button v-if="!isStandalone && (isInstallable || isIOS)" @click="install"
           class="w-full py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
           Установить на устройство
         </button>
+
         <button @click="restart"
           class="w-full py-3 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-gray-100 transition-colors">
           Пройти заново
         </button>
       </div>
     </div>
+
     <footer class="w-full max-w-lg text-center text-xs text-gray-500 dark:text-gray-400 mt-8 pt-4 border-t border-gray-200 dark:border-gray-800">
       Инструмент создан Din Kana, PM/BA.<br>Для сотрудничества:
       <a href="https://t.me/din_kana" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">Telegram</a> ·
       <a href="https://www.linkedin.com/in/din-kana/" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">LinkedIn</a>
     </footer>
+
     <transition name="fade">
       <div v-if="flashMsg" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg shadow-lg text-sm">
         {{ flashMsg }}
